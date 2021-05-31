@@ -1,0 +1,9 @@
+,(Intercept),factor(pH)5.5 ,factor(pH)6.5,factor(pH)7.5,factor(enzyme)Bgase,factor(enzyme)NAGase,revK,factor(pH)5.5:factor(enzyme)Bgase,factor(pH)6.5:factor(enzyme)Bgase,factor(pH)7.5:factor(enzyme)Bgase,factor(pH)5.5:factor(enzyme)NAGase,factor(pH)6.5:factor(enzyme)NAGase,factor(pH)7.5:factor(enzyme)NAGase,factor(pH)5.5:revK,factor(pH)6.5:revK,factor(pH)7.5:revK,factor(enzyme)Bgase:revK,factor(enzyme)NAGase:revK,factor(pH)5.5:factor(enzyme)Bgase:revK,factor(pH)6.5:factor(enzyme)Bgase:revK,factor(pH)7.5:factor(enzyme)Bgase:revK,factor(pH)5.5:factor(enzyme)NAGase:revK,factor(pH)6.5:factor(enzyme)NAGase:revK,factor(pH)7.5:factor(enzyme)NAGase:revK
+AP:BG-4.5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0
+AP:BG-5.5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0
+AP:BG-6.5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0
+AP:BG-7.5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0
+AP:NAG-4.5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0
+AP:NAG-5.5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0
+AP:NAG-6.5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0
+AP:NAG-7.5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1
