@@ -167,29 +167,3 @@ for(LL in LLres){
 checklist$sig <- checklist$pval <= 0.05
 checklist[checklist$sig == TRUE, ]
 rm(list = ls())
-
-
-### C) Contrasts of temperature sensitivity of BGase, NAGase, and APase for each pH
-data <- read.csv("Output/allenz.csv", row.names = 1)
-head(data)
-
-## 1) Linear model using the full dataset
-fmodel <- lm(((-8.314)*lnactivity)^2 ~ factor(pH)*factor(enzyme)*revK, 
-             data = data[data$pH != 3.5 & data$pH != 8.5, ])
-fmodel
-hist(residuals(fmodel), breaks = seq(-630, 660, 30), xlab = "", 
-     main = "Histogram of the linear model using the full dataset \nResponse variable: ((-8.314)*ln(Specific Activity))^2")
-# Shapiro-Wilk normality test
-shapiro.test(fmodel$residuals)
-# Breusch-Pagan heteroskedasticity test
-bptest(fmodel)
-summary(fmodel)
-
-## 2) Running contrasts
-# importing contrast matrix
-mt <- read.csv("Data/cmatrix_allenz.csv", check.names = FALSE, row.names = 1)
-head(mt)
-
-# running contrasts
-summary(glht(fmodel, linfct = as.matrix(mt)), test=adjusted("single-step"))
-rm(list = ls())
