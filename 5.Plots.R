@@ -142,15 +142,12 @@ for (e in enzpairs){
   nm <- gsub(":", "", ep)
   if(e == "bgase:apase"){
     par(mar = c(0, 4, 0.5, 0.5))
-    ast <- c(4.5, 5.5, 6.5, 7.5)
     lb <- "(a)"
   } else if(e == "nagase:apase"){
     par(mar = c(0, 4, 0, 0.5))
-    ast <- c(4.5, 5.5, 6.5, 7.5)
     lb <- "(b)"
   } else{
     par(mar = c(3.5, 4, 0, 0.5))
-    ast <- c(4.5, 7.5)
     lb <- "(c)"
   }
   plot(x = flowratios$ph[flowratios$Pair == ep], 
@@ -175,23 +172,12 @@ for (e in enzpairs){
            bg = bgs[names(bgs) == t], col = "black",
            pch = pts[names(pts) == t], cex = 1.6, lwd = 1.2)
   }
-  for(a in ast){
-    if(max(flowratios$ratio[flowratios$Pair == ep & flowratios$ph == a]) < ceiling(round(max(flowratios$ratio[flowratios$Pair == ep])))/2){
-      ymax <- ceiling(round(max(flowratios$ratio[flowratios$Pair == ep]), 1))*0.4
-    } else{
-      ymax <- max(flowratios$ratio[flowratios$Pair == ep & flowratios$ph == a])*1.15
-    }
-    points(x = a, 
-         y = ymax, 
-         bg = bgs[names(bgs) == t], col = "black",
-         pch = 8, cex = 0.7, lwd = 1.5)
-    }
-  legend("bottomright", legend =c(expression(paste(" 5", degree, "C")), 
+}
+legend("bottomright", legend =c(expression(paste(" 5", degree, "C")), 
                               expression(paste("15", degree, "C")),
                               expression(paste("25", degree, "C"))), 
          col = 'black', pch = pts, lty = ltys, lwd = , seg.len = 2, bty = "n", cex = 0.8,
          pt.bg = bgs, pt.cex = 1.4)
-}
 dev.off()
 rm(list = ls())
 
