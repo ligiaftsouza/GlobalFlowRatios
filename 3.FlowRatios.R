@@ -77,3 +77,5 @@ for(e in enzpairs){
 }
 fr_cv$cvperc <- fr_cv$cv_fr*100
 fr_cv
+write.csv(fr_cv, "Output/flowratios_cv.csv")
+rm(list = ls())
