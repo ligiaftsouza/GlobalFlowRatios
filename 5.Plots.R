@@ -219,3 +219,39 @@ legend("topright", legend = enz,
        lty = ltyenz, lwd = 3, bty = "n", cex = 0.7, seg.len = 1.6)
 dev.off()
 rm(list = ls())
+
+
+## Fig. S1
+cvflows <- read.csv("Output/flowratios_cv.csv", row.names = "", header = T, check.names = F)
+head(cvflows)
+flows <- c("C:P", "N:P", "C:N")
+pts <- c(22, 23, 21)
+names(pts) <- flows
+ltys <- c(2, 3, 1)
+names(ltys) <- flows
+bgs <- c("white", "black", "white")
+names(bgs) <- flows
+
+png(paste0("Plots/FigS1.png"), width = 1600, height = 1300, pointsize = 60)
+par(mar = c(3, 3, 1, 1))
+plot(x = cvflows$ph, 
+     y = cvflows$cvperc, 
+     type = "n", col = "black", lwd = 3, 
+     ylim = c(0, 70),
+     ylab = "", xlab = "", xaxt = "n", yaxt = "n")
+axis(1, at = c(4.5, 5.5, 6.5, 7.5), mgp = c(0, 0.8, 0), cex.axis = 0.8)
+mtext("pH", side = 1, mgp = c(0, 0.8, 0), cex = 0.7, line = 1.8)
+axis(2, labels = T, mgp = c(0, 0.8, 0), cex.axis = 0.8)
+mtext(("Estimated CV with warming, %"), side = 2, mgp = c(0, 0.8, 0), cex = 0.7, line = 1.8)
+for (f in flows){
+  lines(x = cvflows$ph[cvflows$pair == f], y = cvflows$cvperc[cvflows$pair == f], 
+        col = "black", lwd = 3, lty = ltys[names(ltys) == f])
+  points(x = cvflows$ph[cvflows$pair == f], y = cvflows$cvperc[cvflows$pair == f],
+         bg = bgs[names(bgs) == f], col = "black",
+         pch = pts[names(pts) == f], cex = 1.6, lwd = 1.2)
+}
+legend("topright", legend = c("C:P flow ratio", "N:P flow ratio", "C:N flow ratio"), 
+       col = 'black', pch = pts, lty = ltys, lwd = 2, seg.len = 3, bty = "n", cex = 0.8,
+       pt.bg = bgs, pt.cex = 1.4)
+dev.off()
+rm(list = ls())
