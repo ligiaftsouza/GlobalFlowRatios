@@ -141,7 +141,7 @@ for(r in ratios){
   gc()
   lg <- get_legend(pl1)
   prow2 <- plot_grid(prow, lg, ncol = 1, rel_heights = c(1, .1))
-  save_plot(paste0("Maps/Fig", 4 + which(ratios == r), ".png"), prow2, dpi=500, 
+  save_plot(paste0("Maps/Figure_", 4 + which(ratios == r), ".png"), prow2, dpi = 450, 
             base_width = 7, base_height = 4, nrow = 3, ncol = 2)
   gc()
 }
