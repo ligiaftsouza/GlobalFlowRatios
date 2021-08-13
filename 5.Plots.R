@@ -2,256 +2,172 @@
 
 setwd("./PurifiedEnzymeData")
 
+library(tidyverse)
+library(cowplot)
 
-### Fig. 1
-## Calculating the average per temperature and pH
-data <- read.csv("Output/apase_kinetics.csv", check.names = F, row.names = 1)
+### Fig. 1a and 1b
+## APase kinetics
+data <- read_csv("Output/apase_kinetics.csv")
 head(data)
-phs <- unique(data$pH)
-temps <- unique(data$temp)
-avg_apase <- data.frame()
-k <- 1
-for(p in phs){
-  for(t in temps){
-    avg_apase[k, "pH"] <- p
-    avg_apase[k, "temp"] <- t
-    avg_apase[k, "avg_SpAct"] <- mean(data$SpecificActivity[data$pH == p & data$temp == t], na.rm = T)
-    avg_apase[k, "sd_SpAct"] <- sd(data$SpecificActivity[data$pH == p & data$temp == t], na.rm = T)
-    k <- k + 1
-  }
-}
-avg_apase
 
-png("Plots/Fig1.png", width = 1600, height = 1300, pointsize = 60)
-par(oma = c(0, 0, 0, 0), mar = c(3, 4, 0.5, 1))
-plot(x = avg_apase$pH, y = avg_apase$avg_SpAct, type = "n", xlab = "", 
-     ylab = "", ylim = c(0, 36), xaxt = "n", cex = 0.9, 
-     cex.axis = 0.9)
-axis(1, at = seq(3.5, 7.5, 1), cex = 0.9, cex.axis = 0.9)
-mtext(side = 1, "pH", line = 2, cex = 0.9)
-mtext(side = 2, (expression(paste("APase specific activity, ", mu, "mol h"^-1*"mg"["enzyme"]^-1*""))), 
-      line = 1.8, cex = 0.9)
-pchtemps <- c(21, 22, 24, 25)
-names(pchtemps) <- c(5, 15, 25, 35)
-ltytemps <- c(1, 2, 3, 5)
-names(ltytemps) <- c(5, 15, 25, 35)
-bgtemps <- c("white", "black", "white", "black")
-names(bgtemps) <- c(5, 15, 25, 35)
-for(t in temps){
-    arrows(x0 = avg_apase$pH[avg_apase$temp == t], 
-           x1 = avg_apase$pH[avg_apase$temp == t], 
-           y0 = avg_apase$avg_SpAct[avg_apase$temp == t] - avg_apase$sd_SpAct[avg_apase$temp == t], 
-           y1 = avg_apase$avg_SpAct[avg_apase$temp == t] + avg_apase$sd_SpAct[avg_apase$temp == t], 
-           lty = 1, angle = 90, code = 3, length = 0.05, lwd = 2, 
-           col = "black")
-    lines(x = avg_apase$pH[avg_apase$temp == t], 
-          y = avg_apase$avg_SpAct[avg_apase$temp == t], col = "black", 
-          lwd = 2, lty = ltytemps[names(ltytemps) == t])
-    points(x = avg_apase$pH[avg_apase$temp == t],
-           y = avg_apase$avg_SpAct[avg_apase$temp == t],
-           bg = bgtemps[names(bgtemps) == t], pch = pchtemps[names(pchtemps) == t], 
-           cex = 1.6)
-}
-legend("bottomleft", col = "black", pch = rev(pchtemps), pt.bg = rev(bgtemps),
-       c(expression(35~degree~C), expression(25~degree~C), expression(15~degree~C), expression("  5"~degree~"C")),
-       lty = rev(ltytemps), lwd =2, cex = 0.6, pt.cex = 1.2, 
-       ncol = 2, bty = "n", seg.len = 3)
-text(x = 7.0, y = 33, c("pH: p < 0.001\ntemperature: p < 0.001\npH*temperature: p < 0.001"), cex = 0.4)
-dev.off()
+avg_apase <- data %>% group_by(pH, temp) %>% 
+  summarise(avg_SpAct = mean(SpecificActivity),
+            sd_SpAct = sd(SpecificActivity),
+            avg_lnSpAct = mean(log(SpecificActivity)),
+            sd_lnSpAct = sd(log(SpecificActivity)))
+
+p1 <- ggplot(avg_apase, aes(x = pH, y = avg_SpAct, 
+                            pch = factor(temp), linetype = factor(temp), fill = factor(temp)))+
+  geom_errorbar(aes(ymin = avg_SpAct - sd_SpAct,
+                    ymax = avg_SpAct + sd_SpAct), linetype = 1, width = 0.1)+
+  geom_path()+
+  geom_point(size = 3, stroke = 0.5)+
+  scale_shape_manual(values = c("5" = 21, "15" = 22, "25" = 24, "35" = 25),
+                     labels = c("5" = expression(5*degree*C), "15" = expression(15*degree*C),
+                                "25" = expression(25*degree*C), "35" = expression(35*degree*C))) +
+  scale_fill_manual(values = c("5" = "white", "15" = "black", "25" = "white", "35" = "black"),
+                    labels = c("5" = expression(5*degree*C), "15" = expression(15*degree*C),
+                               "25" = expression(25*degree*C), "35" = expression(35*degree*C)))+
+  scale_linetype_manual(values = c("5" = 1, "15" = 2, "25" = 3, "35" = 5),
+                        labels = c("5" = expression(5*degree*C), "15" = expression(15*degree*C),
+                                   "25" = expression(25*degree*C), "35" = expression(35*degree*C)))+
+  scale_x_continuous("pH", breaks = c(3.5, 4.5, 5.5, 6.5, 7.5))+
+  scale_y_continuous(expression(paste("APase specific activity, ", mu, "mol h"^-1*"mg"["enzyme"]^-1*"")),
+                     limits = c(0, 35))+
+  annotate(geom = "text", x = 6.7, y = 30, size = 3,
+           label = c("pH: p < 0.001\ntemperature: p < 0.001\npH*temperature: p < 0.001"))+
+  theme(panel.background = element_rect(fill = "white"), 
+        panel.border = element_rect(fill = NA), legend.title = element_blank(),
+        legend.key = element_rect(fill = NA), legend.key.width = unit(1.2, "cm"),
+        legend.position = c(0.2, 0.1), legend.spacing.x = unit(0.1, "cm"),
+        axis.text = element_text(size = 12, colour = "black"), legend.key.height = unit(0.4, "cm"))+
+  guides(fill = guide_legend(ncol = 2), 
+         shape = guide_legend(ncol = 2), linetype = guide_legend(ncol = 2))
+
+p2 <- ggplot(avg_apase, aes(x = 1/(temp + 273.15), y = avg_lnSpAct, 
+                            pch = factor(pH), linetype = factor(pH), fill = factor(pH)))+
+  geom_errorbar(aes(ymin = avg_lnSpAct - sd_lnSpAct,
+                    ymax = avg_lnSpAct + sd_lnSpAct), linetype = 1, width = 0.000005)+
+  geom_smooth(method = "lm", se = FALSE, color = "black", lwd = 0.5)+
+  geom_point(size = 3, stroke = 0.5)+
+  scale_shape_manual(values = c("3.5" = 15, "4.5" = 21, "5.5" = 19, "6.5" = 24, "7.5" = 17),
+                     labels = c("3.5" = "pH 3.5", "4.5" = "pH 4.5", "5.5" = "pH 5.5", "6.5" = "pH 6.5", "7.5" = "pH 7.5")) +
+  scale_fill_manual(values = c("3.5" = "black", "4.5" = "white", "5.5" = "black", "6.5" = "white", "7.5" = "black"),
+                    labels = c("3.5" = "pH 3.5", "4.5" = "pH 4.5", "5.5" = "pH 5.5", "6.5" = "pH 6.5", "7.5" = "pH 7.5")) +
+  scale_linetype_manual(values = c("3.5" = 6, "4.5" = 1, "5.5" = 3, "6.5" = 4, "7.5" = 5),
+                        labels = c("3.5" = "pH 3.5", "4.5" = "pH 4.5", "5.5" = "pH 5.5", "6.5" = "pH 6.5", "7.5" = "pH 7.5")) +
+  scale_x_continuous("1/T, K", breaks = round(unique(1/(avg_apase$temp + 273.15)), 5))+
+  scale_y_continuous(expression(paste("ln(APase specific activity), ", mu, "mol h"^-1*"mg"["enzyme"]^-1*"")),
+                     limits = c(0, 4))+
+  theme(panel.background = element_rect(fill = "white"), 
+        panel.border = element_rect(fill = NA), legend.title = element_blank(),
+        legend.key = element_rect(fill = NA), legend.key.width = unit(1.2, "cm"),
+        legend.position = c(0.2, 0.1), legend.spacing.x = unit(0.1, "cm"),
+        axis.text = element_text(size = 12, colour = "black"), legend.key.height = unit(0.4, "cm"))+
+  guides(fill = guide_legend(ncol = 2), 
+         shape = guide_legend(ncol = 2), linetype = guide_legend(ncol = 2))
+
+save_plot("Plots/Fig1.png", plot_grid(p1, p2, ncol = 2, nrow = 1, labels = c("(a)", "(b)")), 
+          dpi = 450, base_width = 12, base_height = 5)
 rm(list = ls())
 
-
-### Fig. 2
-data <- read.csv("Output/apase_kinetics.csv", check.names = F, row.names = 1)
-head(data)
-phs <- unique(data$pH)
-temps <- unique(data$temp)
-avg_apase <- data.frame()
-k <- 1
-for(p in phs){
-  for(t in temps){
-    avg_apase[k, "pH"] <- p
-    avg_apase[k, "temp"] <- t
-    avg_apase[k, "revK"] <- 1/(t + 273.15)
-    avg_apase[k, "avg_lnSpAct"] <- mean(log(data$SpecificActivity[data$pH == p & data$temp == t]), na.rm = T)
-    avg_apase[k, "sd_lnSpAct"] <- sd(log(data$SpecificActivity[data$pH == p & data$temp == t]), na.rm = T)
-    k <- k + 1
-  }
-}
-
-png("Plots/Fig2.png", width = 1600, height = 1300, pointsize = 60)
-par(oma = c(0, 0, 0, 0), mar = c(3, 4, 0.5, 1))
-plot(x = avg_apase$revK, y = avg_apase$avg_lnSpAct, 
-     ylab = "", xlab = "", pch = c(1, 19, 2, 17, 15)[as.factor(avg_apase$ph)],
-     ylim = c(0,4), xaxt = "n", yaxt = "n", cex = 1.2, cex.axis = 0.8,
-     col = 'black', bg = "black", type = "n")
-axis(1, at = round(unique(avg_apase$revK), digits = 5), cex.axis = 0.8, mgp = c(0, 0.7, 0), cex = 0.8)
-axis(2, at = seq(0, 4, 1), mgp = c(0, 0.7, 0), cex.axis = 0.8, cex = 0.8)
-mtext(side = 1, "1/K", line = 1.8, cex = 0.85)
-mtext(side = 2, (expression(paste("ln(APase specific activity), ", mu,
-                                  "mol h"^-1*"mg"["enzyme"]^-1*" "))), line = 2, cex = 0.85)
-ltys <- c(6, 1, 3, 4, 5)
-names(ltys) <- rev(phs)
-pts <- c(15, 21, 19, 24, 17)
-names(pts) <- rev(phs)
-bgs <-  c("black", "white", "black", "white", "black")
-names(bgs) <- rev(phs)
-for(p in phs){                                                       ## using a loop to plot the error bars (using SEM but it can be changed)
-  arrows(x0 = avg_apase$revK[avg_apase$pH == p], x1 = avg_apase$revK[avg_apase$pH == p], 
-         y0 = avg_apase$avg_lnSpAct[avg_apase$pH == p] - avg_apase$sd_lnSpAct[avg_apase$pH == p], 
-         y1 = avg_apase$avg_lnSpAct[avg_apase$pH == p] + avg_apase$sd_lnSpAct[avg_apase$pH == p], 
-         lty = 1, angle = 90, code = 3, length = 0.05, col = "black", 
-         lwd = 0.5)
-  clip(min(avg_apase$revK), max(avg_apase$revK), 0, 5)                                  ## adding a clip to plot lines within the avg_apase points
-  abline(lm(avg_apase$avg_lnSpAct[avg_apase$pH == p] ~avg_apase$revK[avg_apase$pH == p]), 
-         col = "black", 
-         lwd = 2, lty = ltys[names(ltys) == p])  
-  do.call("clip", as.list(par("usr")))
-  points(x = avg_apase$revK[avg_apase$pH == p], y = avg_apase$avg_lnSpAct[avg_apase$pH == p], 
-         pch = pts[names(pts) == p], cex = 1.2,
-         col = "black", 
-         bg = bgs[names(bgs) == p])
-}
-legend("bottomleft", col = "black", 
-       pch = pts, pt.bg = bgs, lty = ltys, lwd = 2,
-       c("pH 3.5", "pH 4.5", "pH 5.5", "pH 6.5", "pH 7.5"), 
-       cex = 0.75, pt.cex = 0.85, ncol = 2,  bty = "n")                                                             ## adding a legend to the plot
-dev.off()     
-rm(list = ls())
-
-
-## Fig. 3
-flowratios <- read.csv("Output/flowratios.csv", row.names = 1)
+## Fig. 2
+flowratios <- read_csv("Output/flowratios.csv")
 head(flowratios)
-pts <- c(21, 22, 23)
-names(pts) <- c("5", "15", "25")
-ltys <- c(1, 2, 3)
-names(ltys) <- c("5", "15", "25")
-bgs <- c("black", "white", "black")
-names(bgs) <- c("5", "15", "25")
-temps <- c(5, 15, 25)
-enzpairs <- c("bgase:apase", "nagase:apase", "bgase:nagase")
-names(enzpairs) <- c("C:P", "N:P", "C:N")
 
-png(paste0("Plots/Fig3.png"), width = 1000, height = 2000, pointsize = 60)
-par(mfrow = c(1, 3))
-layout(matrix(c(1, 2, 3), nrow = 3, ncol = 1), heights = c(0.8, 0.8, 1))
-layout.show(3)
-for (e in enzpairs){
-  ep <- names(enzpairs[enzpairs == e])
-  nm <- gsub(":", "", ep)
-  if(e == "bgase:apase"){
-    par(mar = c(0, 4, 0.5, 0.5))
-    lb <- "(a)"
-  } else if(e == "nagase:apase"){
-    par(mar = c(0, 4, 0, 0.5))
-    lb <- "(b)"
-  } else{
-    par(mar = c(3.5, 4, 0, 0.5))
-    lb <- "(c)"
-  }
-  plot(x = flowratios$ph[flowratios$Pair == ep], 
-       y = flowratios$ratio[flowratios$Pair == ep], 
-       type = "n", col = "black", lwd = 3, 
-       ylim = c(-1, ceiling(round(max(flowratios$ratio[flowratios$Pair == ep]), 1))*1.2),
-       ylab = "", xlab = "", xaxt = "n", yaxt = "n")
-  if(e == "bgase:nagase"){
-    axis(1, at = seq(4.5, 7.5, 1), labels = T, mgp = c(0, 0.8, 0), cex.axis = 0.8)
-    mtext("pH", side = 1, cex = 0.7, line = 2.3)
-  }
-  axis(2, labels = T, mgp = c(0, 0.8, 0), cex.axis = 0.8)
-  mtext(paste(ep, "\nestimated flow ratio"), side = 2, 
-        mgp = c(0, 0.8, 0), cex = 0.7, line = 1.8)
-  text(x = 4.5, y = max(flowratios$ratio[flowratios$Pair == ep])*1.2, lb, xpd = NA, font = 2)
-  for (t in temps){
-    lines(x = flowratios$ph[flowratios$Pair == ep & flowratios$tempC == t], 
-          y = flowratios$ratio[flowratios$Pair == ep & flowratios$tempC == t], 
-          col = "black", lwd = 2, lty = ltys[names(ltys) == t])
-    points(x = flowratios$ph[flowratios$Pair == ep & flowratios$tempC == t], 
-           y = flowratios$ratio[flowratios$Pair == ep & flowratios$tempC == t], 
-           bg = bgs[names(bgs) == t], col = "black",
-           pch = pts[names(pts) == t], cex = 1.6, lwd = 1.2)
-  }
-}
-legend("bottomright", legend =c(expression(paste(" 5", degree, "C")), 
-                              expression(paste("15", degree, "C")),
-                              expression(paste("25", degree, "C"))), 
-         col = 'black', pch = pts, lty = ltys, lwd = , seg.len = 2, bty = "n", cex = 0.8,
-         pt.bg = bgs, pt.cex = 1.4)
-dev.off()
+svp2 <- ggplot(transform(flowratios, Pair = factor(Pair, levels = c("C:P", "N:P", "C:N"))), 
+              aes(x = ph, y = ratio, 
+                  shape = factor(tempC), fill = factor(tempC), linetype = factor(tempC)))+
+  facet_grid(rows = vars(Pair), labeller = labeller(c("C:N" = "C:N estimated flow ratio",
+                                                      "C:P" = "C:P estimated flow ratio", 
+                                                      "N:P" = "N:P estimated flow ratio")),
+             scales = "free_y", switch = "y")+
+  geom_path() +
+  geom_point(size = 3) +
+  scale_shape_manual(values = c("5" = 21, "15" = 22, "25" = 23),
+                     labels = c("5" = expression(5*degree*C), "15" = expression(15*degree*C),
+                                "25" = expression(25*degree*C)))+
+  scale_fill_manual(values = c("5" = "black", "15" = "white", "25" = "black"),
+                    labels = c("5" = expression(5*degree*C), "15" = expression(15*degree*C),
+                               "25" = expression(25*degree*C)))+
+  scale_linetype_manual(values = c("5" = 1, "15" = 2, "25" = 3),
+                        labels = c("5" = expression(5*degree*C), "15" = expression(15*degree*C),
+                                   "25" = expression(25*degree*C))) +
+  scale_y_continuous(limits = c(0, NA), c("Estimated flow ratio"))+
+  scale_x_continuous("pH", limits = c(4.5, 7.5), breaks = c(4.5, 5.5, 6.5, 7.5))+
+  theme(panel.background = element_rect(fill = "white"), 
+        panel.border = element_rect(fill = NA), legend.title = element_blank(),
+        legend.key = element_rect(fill = NA), legend.key.width = unit(1.2, "cm"),
+        legend.position = c(0.8, 0.05), legend.spacing.y = unit(0.05, "cm"),
+        axis.text = element_text(size = 12, colour = "black"), 
+        legend.background = element_rect(fill = "transparent"),
+        strip.background = element_rect(fill = "white"), strip.placement = "outside",
+        strip.text = element_text(size = 12), legend.key.height = unit(0.4, "cm"))
+save_plot("Plots/Fig2.png", svp2, dpi = 450, base_height = 8, base_width = 4)
 rm(list = ls())
 
+### Fig. 3
+data <- read_csv("Output/arrdata.csv") 
+data <- data %>% filter(ph != 3.5 & ph != 8.5)
 
-### Fig. 4
-data <- read.csv("Output/arrdata.csv", row.names = "", header = T, check.names = F) 
-data <- data[data$ph != 3.5 & data$ph != 8.5, ]
-enz <- c("APase", "BGase", "NAGase")
-ltyenz <- c(3, 1, 2)
-names(ltyenz) <- enz
-
-png("Plots/Fig4.png", width = 1600, height = 1300, 
-    pointsize = 60)
-par(oma = c(0, 0, 0, 0), mar = c(3, 3, 0.5, 1))
-x <- seq(3.5, 7.5, 0.1)
-slopeSpline <- splinefun(x = data$ph, y = data$Ea)
-plot(x, slopeSpline(x), type = "n", xlab = "", ylab = "", 
-     ylim = c(0, 75), xlim = c(4.5, 7.5), xaxt = "n", yaxt = "n", cex = 0.9, xaxs = "i")
-axis(1, at = seq(3.5, 7.5, 1), cex = 0.8, cex.axis = 0.8, mgp = c(0, 0.7, 0)) 
-axis(2, at = seq(0, 75, 10), cex.axis = 0.8, mgp = c(0, 0.7, 0), cex = 0.8)
-axis(3, labels = FALSE, tick = FALSE)
-mtext(side = 1, "pH", line = 1.7, cex = 0.85)
-mtext(expression(paste("E"["a"]*", kJ mol"^-1*"")), side = 2, line = 1.7, cex = 0.85)
-# text(x = 3.5, y = 25, "(b)")
-for(e in enz){
-  slopeSpline <- splinefun(x = data$ph[data$enzyme == tolower(e)], 
-                           y = data$Ea[data$enzyme == tolower(e)])
-  slopeSplineSD <- splinefun(x = data$ph[data$enzyme == tolower(e)], 
-                             y = (-data$sd[data$enzyme == tolower(e)]))
-  x <- seq(3.5, 7.5, 0.1)
-  x1 <- seq(3.5, 7.49, 0.01)
-  y1 <- slopeSpline(x) + slopeSplineSD(x)
-  y2 <- slopeSpline(x) - slopeSplineSD(x)
-  polygon(c(x,rev(x)), c(y2,rev(y1)), col = adjustcolor("lightgray", alpha.f = 0.5), border = NA)
-  lines(x = x1, y = slopeSpline(x1), lwd = 3, lty = ltyenz[names(ltyenz) == e])
+for(enz in unique(data$enzyme)){
+  dtf <- setNames(data.frame(spline(x = data$ph[data$enzyme == enz], 
+                                    y = data$Ea[data$enzyme == enz], n = 31)), c("ph", "EaSpline"))
+  dtf[, "EaSplineSd"] <- data.frame(spline(x = data$ph[data$enzyme == enz], 
+                                           y = data$sd[data$enzyme == enz], n = 31))[, 2]
+  dtf[, "enzyme"] <- enz
+  assign(paste0(enz), dtf)
 }
-box(which = "plot", lty = "solid")
-legend("topright", legend = enz,
-       lty = ltyenz, lwd = 3, bty = "n", cex = 0.7, seg.len = 1.6)
-dev.off()
+splines <- rbind(apase, bgase, nagase)
+
+svp3 <- ggplot(splines, aes(x = ph, y = EaSpline, linetype = factor(enzyme)))+
+  geom_ribbon(aes(ymin = EaSpline - EaSplineSd,
+                  ymax = EaSpline + EaSplineSd), fill = "grey", alpha = 0.5,
+              show.legend = F)+
+  geom_line()+
+  scale_linetype_manual(values = c("apase" = 3, "bgase" = 1, "nagase" = 2),
+                        labels = c("apase" = "APase", "bgase" = "BGase", "nagase" = "NAGase"))+
+  scale_x_continuous("pH", limits = c(4.5, 7.5), 
+                     breaks = c(4.5, 5.5, 6.5, 7.5), expand = c(0.01, 0.01))+
+  scale_y_continuous(expression(paste("E"["a"]*", kJ mol"^-1*"")), limits = c(-2, 75),
+                     breaks = seq(0, 70, 10))+
+  theme(panel.background = element_rect(fill = "white"), 
+        panel.border = element_rect(fill = NA), legend.title = element_blank(),
+        legend.key = element_rect(fill = NA), legend.key.width = unit(1.2, "cm"),
+        legend.position = c(0.85, 0.9), legend.spacing.y = unit(0.01, "cm"),
+        legend.key.height = unit(0.4, "cm"),
+        axis.text = element_text(size = 12, colour = "black"), 
+        legend.background = element_rect(fill = "transparent"),
+        strip.background = element_rect(fill = "white"), strip.placement = "outside",
+        strip.text = element_text(size = 12))
+save_plot("Plots/Fig3.png", svp3, dpi = 450, base_height = 4, base_width = 5)
 rm(list = ls())
 
 
 ## Fig. S1
-cvflows <- read.csv("Output/flowratios_cv.csv", row.names = "", header = T, check.names = F)
+cvflows <- read_csv("Output/flowratios_cv.csv")
 head(cvflows)
-flows <- c("C:P", "N:P", "C:N")
-pts <- c(22, 23, 21)
-names(pts) <- flows
-ltys <- c(2, 3, 1)
-names(ltys) <- flows
-bgs <- c("white", "black", "white")
-names(bgs) <- flows
 
-png(paste0("Plots/FigS1.png"), width = 1600, height = 1300, pointsize = 60)
-par(mar = c(3, 3, 1, 1))
-plot(x = cvflows$ph, 
-     y = cvflows$cvperc, 
-     type = "n", col = "black", lwd = 3, 
-     ylim = c(0, 70),
-     ylab = "", xlab = "", xaxt = "n", yaxt = "n")
-axis(1, at = c(4.5, 5.5, 6.5, 7.5), mgp = c(0, 0.8, 0), cex.axis = 0.8)
-mtext("pH", side = 1, mgp = c(0, 0.8, 0), cex = 0.7, line = 1.8)
-axis(2, labels = T, mgp = c(0, 0.8, 0), cex.axis = 0.8)
-mtext(("Estimated CV with warming, %"), side = 2, mgp = c(0, 0.8, 0), cex = 0.7, line = 1.8)
-for (f in flows){
-  lines(x = cvflows$ph[cvflows$pair == f], y = cvflows$cvperc[cvflows$pair == f], 
-        col = "black", lwd = 3, lty = ltys[names(ltys) == f])
-  points(x = cvflows$ph[cvflows$pair == f], y = cvflows$cvperc[cvflows$pair == f],
-         bg = bgs[names(bgs) == f], col = "black",
-         pch = pts[names(pts) == f], cex = 1.6, lwd = 1.2)
-}
-legend("topright", legend = c("C:P flow ratio", "N:P flow ratio", "C:N flow ratio"), 
-       col = 'black', pch = pts, lty = ltys, lwd = 2, seg.len = 3, bty = "n", cex = 0.8,
-       pt.bg = bgs, pt.cex = 1.4)
-dev.off()
+ggplot(transform(cvflows, pair = factor(pair, levels = c("C:P", "N:P", "C:N"))), 
+       aes(x = ph, y = cv_fr*100, shape = pair, linetype = pair, fill = pair))+
+  geom_path()+
+  geom_point(size = 4, stroke = 0.5)+
+  scale_shape_manual(values = c("C:P" = 22, "N:P" = 23, "C:N" = 21),
+                     labels = c("C:P" = "C:P flow ratio", "N:P" = "N:P flow ratio", "C:N" = "C:N flow ratio"))+
+  scale_fill_manual(values = c("C:P" = "white", "N:P" = "black", "C:N" = "white"),
+                    labels = c("C:P" = "C:P flow ratio", "N:P" = "N:P flow ratio", "C:N" = "C:N flow ratio"))+
+  scale_linetype_manual(values = c("C:P" = 2, "N:P" = 3, "C:N" = 1),
+                        labels = c("C:P" = "C:P flow ratio", "N:P" = "N:P flow ratio", "C:N" = "C:N flow ratio"))+
+  scale_x_continuous("pH", limits = c(4.5, 7.5), breaks = seq(4.5, 7.5, 1))+
+  scale_y_continuous("Estimated CV with warming, %", limits = c(0, 70), breaks = seq(0, 70, 10))+
+  theme(panel.background = element_rect(fill = "white"), 
+        panel.border = element_rect(fill = NA), legend.title = element_blank(),
+        legend.key = element_rect(fill = NA), legend.key.width = unit(1.2, "cm"),
+        legend.position = c(0.85, 0.9), legend.spacing.y = unit(0.01, "cm"),
+        legend.key.height = unit(0.4, "cm"),
+        axis.text = element_text(size = 12, colour = "black"), 
+        legend.background = element_rect(fill = "transparent"),
+        strip.background = element_rect(fill = "white"), strip.placement = "outside",
+        strip.text = element_text(size = 12))
+save_plot("Plots/FigS1.png", last_plot(), dpi = 450, base_height = 4, base_width = 5)
 rm(list = ls())
