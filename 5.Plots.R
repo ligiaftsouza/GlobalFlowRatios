@@ -102,7 +102,11 @@ svp2 <- ggplot(transform(flowratios, Pair = factor(Pair, levels = c("C:P", "N:P"
         axis.text = element_text(size = 12, colour = "black"), 
         legend.background = element_rect(fill = "transparent"),
         strip.background = element_rect(fill = "white"), strip.placement = "outside",
-        strip.text = element_text(size = 12), legend.key.height = unit(0.4, "cm"))
+        strip.text = element_text(size = 12), legend.key.height = unit(0.4, "cm"))+
+  geom_text(x = 4.5, y = Inf, vjust = 1.5, aes(label = label), 
+            inherit.aes = F, fontface = "bold", size = 4.5,
+            data = data.frame(label = c("(a)", "(b)", "(c)"), Pair = as.factor(c("C:P", "N:P", "C:N"))))
+
 save_plot("Plots/Fig2.png", svp2, dpi = 450, base_height = 8, base_width = 4)
 rm(list = ls())
 
