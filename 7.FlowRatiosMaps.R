@@ -40,7 +40,7 @@ plots_bg <- list(theme(panel.grid.minor = element_blank(),
                        legend.position="bottom", 
                        legend.direction = "horizontal",
                        legend.key = element_rect(colour = "black", size = 4),
-                       legend.key.width = unit(2.0, "cm"), # 1.5
+                       legend.key.width = unit(2.5, "cm"), # 1.5
                        legend.key.height = unit(0.3, "cm"), #0.2
                        legend.text = element_text(margin = margin(t = .2, unit = "lines"))),
                  guides(colour = guide_colorbar(title.position = "top")))
@@ -48,8 +48,8 @@ plots_bg <- list(theme(panel.grid.minor = element_blank(),
 depths <- c("000", "030", "100")
 depths
 ssp <- c(245, 585)
-ratios <- c("cp", "np", "cn")
-names(ratios) <- c("BG:AP", "NAG:AP", "BG:NAG")
+ratios <- c("cn", "cp", "np")
+names(ratios) <- c("BG:NAG", "BG:AP", "NAG:AP")
 
 dfratio <- read.csv("Output/relativeflowratiochangestats.csv")
 dfratio
@@ -141,7 +141,7 @@ for(r in ratios){
   gc()
   lg <- get_legend(pl1)
   prow2 <- plot_grid(prow, lg, ncol = 1, rel_heights = c(1, .1))
-  save_plot(paste0("Maps/Figure_", 4 + which(ratios == r), ".png"), prow2, dpi = 450, 
+  save_plot(paste0("Maps/Figure", 3 + which(ratios == r), ".png"), prow2, dpi = 450, 
             base_width = 7, base_height = 4, nrow = 3, ncol = 2)
   gc()
 }

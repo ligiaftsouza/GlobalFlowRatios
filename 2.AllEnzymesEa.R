@@ -40,7 +40,7 @@ for(e in enzs){
     arrdata[k, "ph"] <- p
     arrdata[k, "intercept"] <- lmph$coefficients[1]
     arrdata[k, "slope"] <- lmph$coefficients[2]
-    ## Activation energy by multiplying the slope by R (the gas constant, which is 8.314 K-1 mol-1); the division by 100 is to transform J mol-1 to kJ mol-1
+    ## Activation energy by multiplying the slope by R (the gas constant, which is 8.314 J-1 mol-1); the division by 1000 is to transform J mol-1 to kJ mol-1
     arrdata[k, "Ea"] <- (lmph$coefficients[2]*(-8.314))/1000
     ## getting the standard deviation in the same unit as the Ea
     arrdata[k, "sd"] <- abs(out$coefficients[2,2]*(-8.314))/1000

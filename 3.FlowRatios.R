@@ -10,10 +10,10 @@ data
 ## Calculating Vmax
 kvmax <- data.frame()
 enzymes <- unique(data$enzyme)
-phs <- unique(data$ph)
 temps <- c(5, 15, 25)
 k <- 1
 for (e in enzymes){
+  phs <- unique(data$ph[data$enzyme == e])
   for (p in phs){
     for (t in temps){
       ## exponential modification of the Arrhenius equation
@@ -29,6 +29,7 @@ for (e in enzymes){
 flowratios <- data.frame()
 enzpairs <- c("bgase:nagase", "bgase:apase", "nagase:apase")
 names(enzpairs) <- c("C:N", "C:P", "N:P")
+phs <- c(4.5, 5.5, 6.5, 7.5)
 k <- 1
 for (e in enzpairs){
   a <- gsub(pattern = "(\\w{5,6})\\W\\w{5,6}", replacement = "\\1", x = e)
